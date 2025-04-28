@@ -1,0 +1,49 @@
+// Import necessary AWS SDK classes
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.RunInstancesRequest;
+import software.amazon.awssdk.services.ec2.model.RunInstancesResponse;
+import software.amazon.awssdk.services.ec2.model.Ec2Exception;
+import software.amazon.awssdk.services.ec2.model.InstanceType;
+
+public class LaunchEC2Instance {
+
+    public static void main(String[] args) {
+        // Define AWS Region
+        Region region = Region.US_EAST_1; // Change as needed
+
+        // Create EC2 client
+        Ec2Client ec2 = Ec2Client.builder()
+                .region(region)
+                .credentialsProvider(DefaultCredentialsProvider.create())
+                .build();
+
+        try {
+            // AMI ID for Amazon Linux 2 (Update according to your region)
+            String amiId = "ami-0c02fb55956c7d316"; // Example for us-east-1
+
+            RunInstancesRequest runRequest = RunInstancesRequest.builder()
+                    .imageId(amiId)
+                    .instanceType(InstanceType.T2_MICRO)
+                    .maxCount(1)
+                    .minCount(1)
+                    .keyName("your-key-pair-name") // Replace with your key pair
+                    .securityGroupIds("your-security-group-id") // Replace with your SG ID
+                    .build();
+
+            RunInstancesResponse response = ec2.runInstances(runRequest);
+
+            // Print the instance ID
+            String instanceId = response.instances().get(0).instanceId();
+            System.out.println("Successfully launched EC2 instance with ID: " + instanceId);
+
+        } catch (Ec2Exception e) {
+            e.printStackTrace();
+            System.err.println("Failed to launch EC2 instance: " + e.awsErrorDetails().errorMessage());
+        } finally {
+            ec2.close();
+        }
+    }
+}
+
